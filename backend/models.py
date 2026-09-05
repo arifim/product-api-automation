@@ -1,8 +1,9 @@
-from sqlalchemy import Column, Double, String, Integer
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
 from database import Base
 
 class Product(Base):
     __tablename__ = "products"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), index=True)
-    price = Column(Double)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), index=True)
+    price: Mapped[float] = mapped_column()
