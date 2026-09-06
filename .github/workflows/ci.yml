@@ -1,0 +1,67 @@
+name: CI
+
+# КОГДА запускать этот workflow.
+# push        — на каждый пуш в любую ветку
+# pull_request — на каждый PR
+on:
+  push:
+  pull_request:
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest        # виртуальная машина, на которой всё крутится
+
+    steps:
+      # 1. Забираем код репозитория на раннер
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ---------- BACKEND (Python + uv) ----------
+
+      # 2. Ставим uv (менеджер пакетов Python, которым ты собираешь бэк)
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      # 3. Ставим зависимости бэкенда. uv сам скачает нужный Python 3.14 из pyproject.toml
+      - name: Install backend dependencies
+        working-directory: backend
+        run: uv sync
+
+      # 4. Запускаем бэкенд в ФОНЕ.
+      #    nohup + & — чтобы процесс продолжал жить в следующих шагах,
+      #    а не умер вместе с этим шагом. Логи пишем в server.log.
+      - name: Start backend
+        working-directory: backend
+        run: nohup uv run uvicorn main:app --port 8000 > server.log 2>&1 &
+
+      # 5. ЖДЁМ, пока бэкенд реально ответит.
+      #    Без этого тесты стартуют раньше бэка → Connection refused.
+      #    Стучимся в /docs до 30 секунд; если не поднялся — печатаем лог и падаем.
+      - name: Wait for backend to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/docs > /dev/null; then
+              echo "Backend is up!"
+              exit 0
+            fi
+            echo "Waiting for backend... ($i)"
+            sleep 1
+          done
+          echo "Backend failed to start. Logs:"
+          cat backend/server.log
+          exit 1
+
+      # ---------- TESTS (Java + Maven) ----------
+
+      # 6. Ставим Java 21 (кэшируем Maven-зависимости, чтобы не качать каждый раз)
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # 7. Запускаем твои REST Assured тесты против поднятого бэкенда
+      - name: Run API tests
+        working-directory: test
+        run: mvn test
