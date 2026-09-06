@@ -7,8 +7,11 @@ import static io.restassured.RestAssured.given;
 public class ProductService extends BaseService {
 
     public Response createProduct(Product product) {
-        return given().spec(spec()).body(product)
-               .when().post("/product/");
+        return given()
+            .spec(spec())
+            .body(product)
+            .when()
+            .post("/product/");
     }
 
     public Response getProduct(int id) {
@@ -16,4 +19,21 @@ public class ProductService extends BaseService {
                .when().get("/product/" + id);
     }
     // по аналогии: updateProduct(id, product), deleteProduct(id)
+
+    public Response updateProduct(int id, Product newProduct) {
+        return
+            given()
+            .spec(spec())
+            .body(newProduct)
+            .when()
+            .put("/product/" + id);
+    }
+
+    public Response deleteProduct(int id) {
+        return
+            given()
+            .spec(spec())
+            .when()
+            .delete("/product/" + id);
+    }
 }
