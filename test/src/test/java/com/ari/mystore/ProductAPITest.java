@@ -3,6 +3,9 @@ package com.ari.mystore;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.UUID;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.ari.mystore.models.Product;
@@ -16,18 +19,29 @@ public class ProductAPITest {
 
     @Test
     void createProduct_valid_returns200() {
-        Product product = new Product(null, "Banana", 0.59);
+        var productName = "Banana-" + UUID.randomUUID();
+        Product product = new Product(productName, 0.59);
         Response response = productService.createProduct(product);
 
         assertThat(response.statusCode())
             .isEqualTo(200);
         assertThat(response.jsonPath().getString("name"))
-            .isEqualTo("Banana");
+            .isEqualTo(productName);
+    }
+
+    @Test 
+    void createProduct_duplicateName_returns409() {
+        var product1 = new Product("Avocado-" + UUID.randomUUID(), 0.89);
+        productService.createProduct(product1);
+
+        var response = productService.createProduct(product1);
+        assertThat(response.statusCode()).isEqualTo(409);
+        
     }
 
     @Test
     void createProduct_negativePrice_returns422() {
-        Product product = new Product(null, "Bad", -5.0);
+        Product product = new Product("Bad", -5.0);
         Response response = productService.createProduct(product);
 
         assertThat(response.statusCode()).isEqualTo(422);   // валидация!
@@ -35,22 +49,40 @@ public class ProductAPITest {
 
     @Test 
     void updateProduct_valid_returns200() {
-        Product product = new Product(null, "Orange", 2.99);
+        String productName = "Orange-" + UUID.randomUUID();
+        Product product = new Product(productName, 2.99);
         Response response = productService.createProduct(product);
 
-        assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.jsonPath().getString("name")).isEqualTo("Orange");
+        int id = response.body().jsonPath().getInt("id");
 
-        int id = Integer.parseInt(response.jsonPath().getString("id"));
-        System.out.println(id);
-        
-        Product newProduct = new Product(null, "Orange", 10.99);
-        response = productService.updateProduct(id, newProduct);
+        Product updatedProduct = new Product(productName, 10.99);
+        response = productService.updateProduct(id, updatedProduct);
 
         assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.jsonPath().getString("name")).isEqualTo("Orange");
+        assertThat(response.jsonPath().getString("name")).isEqualTo(productName);
         assertThat(Double.parseDouble(response.jsonPath().getString("price"))).isEqualTo(10.99);
 
+    }
+
+    @Test
+    @DisplayName("Get existing product -> 200")
+    void getProduct_existingId_returns200() {
+
+        int productId = 1;
+
+        Response response = productService.getProduct(productId);
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        int actualProductId = response.body().jsonPath().getInt("id");
+
+        assertThat(productId).isEqualTo(actualProductId);
+    }
+
+    @Test
+    @DisplayName("Get not existing product -> returns 404")
+    void getProduct_notExisting_returns404() {
+        Response response = productService.getProduct(6332);
+        assertThat(response.statusCode()).isEqualTo(404);
     }
 
 }

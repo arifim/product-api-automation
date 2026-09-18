@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 from models import Base, Product
-from crud import get_product_by_id, create_product
+from crud import get_product_by_id, create_product, get_all_products
 from schema import ProductCreate, ProductResponse
 
 app = FastAPI()
@@ -18,9 +18,11 @@ def get_db():
     finally:
         db.close()
 
+
 @app.post("/product/", response_model=ProductResponse)
 async def create_product_endpoint(product: ProductCreate, db: Session = Depends(get_db)):
     return create_product(db, product.name, product.price)
+
 
 @app.get("/product/{id}", response_model=ProductResponse)
 async def get_item_endpoint(id: int, db: Session = Depends(get_db)):
@@ -28,6 +30,12 @@ async def get_item_endpoint(id: int, db: Session = Depends(get_db)):
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
+
+
+@app.get("/products/", response_model=list[ProductResponse])
+async def get_all_products_endpoint(db: Session = Depends(get_db)):
+    return get_all_products(db)
+
 
 @app.put("/product/{id}", response_model=ProductResponse)
 async def update_product_endpoint(id: int, new_product: ProductCreate, db: Session = Depends(get_db)):

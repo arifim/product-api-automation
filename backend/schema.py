@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 class ProductCreate(BaseModel):
-    name: str = Field(min_length=2)
+    name: str = Field(min_length=2) #Name should have more than 2 characters
     price: float = Field(gt=0)      #Price should be greater than 0
 
 
