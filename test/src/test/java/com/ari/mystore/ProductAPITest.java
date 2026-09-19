@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
 
+import com.ari.mystore.services.HealthService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +17,7 @@ import io.restassured.response.Response;
 public class ProductAPITest {
 
     ProductService productService = new ProductService();
+    HealthService healthService = new HealthService();
 
     @Test
     void createProduct_valid_returns200() {
@@ -83,6 +85,14 @@ public class ProductAPITest {
     void getProduct_notExisting_returns404() {
         Response response = productService.getProduct(6332);
         assertThat(response.statusCode()).isEqualTo(404);
+    }
+
+    @Test
+    @DisplayName("Check health of the server")
+    void getHealthCheck_return200() {
+        Response response = healthService.healthCheck();
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.jsonPath().getString("status")).isEqualTo("ok");
     }
 
 }
