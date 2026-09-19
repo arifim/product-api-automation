@@ -18,6 +18,9 @@ def get_db():
     finally:
         db.close()
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
 @app.post("/product/", response_model=ProductResponse)
 async def create_product_endpoint(product: ProductCreate, db: Session = Depends(get_db)):
