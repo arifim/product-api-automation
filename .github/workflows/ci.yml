@@ -1,15 +1,15 @@
 name: CI
 
-# КОГДА запускать этот workflow.
-# push        — на каждый пуш в любую ветку
-# pull_request — на каждый PR
+# WHEN run this workflow.
+# push         — Runs your workflow when someone pushes to a repository branch
+# pull_request — Runs your workflow anytime the pull_request event occurs
 on:
   push:
   pull_request:
 
 jobs:
   api-tests:
-    runs-on: ubuntu-latest        # виртуальная машина, на которой всё крутится
+    runs-on: ubuntu-latest        # The type of machine to run the job on
 
     steps:
       # 1. Забираем код репозитория на раннер
@@ -43,7 +43,7 @@ jobs:
       - name: Wait for backend to be ready
         run: |
           for i in {1..30}; do
-            if curl -s http://localhost:8000/docs > /dev/null; then
+            if curl -s http://localhost:8000/health > /dev/null; then
               echo "Backend is up!"
               exit 0
             fi
