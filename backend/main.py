@@ -53,9 +53,9 @@ async def update_product_endpoint(id: int, new_product: ProductCreate, db: Sessi
     
     return product
 
-@app.delete("/product/{id}", response_model=ProductResponse)
+@app.delete("/product/{id}")
 async def delete_item_endpoint(id: int, db: Session = Depends(get_db)):
-    product = db.query(Product).filter(Product.id == id).first()
+    product = get_product_by_id(db=db, id=id)
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
     

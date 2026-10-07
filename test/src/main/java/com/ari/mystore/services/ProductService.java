@@ -14,6 +14,11 @@ public class ProductService extends BaseService {
             .post("/product/");
     }
 
+    public Response getAllProducts() {
+        return given().spec(spec())
+                .when().get("/products/");
+    }
+
     public Response getProduct(int id) {
         return given().spec(spec())
                .when().get("/product/" + id);
